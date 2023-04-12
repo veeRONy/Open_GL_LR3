@@ -9,14 +9,14 @@
 #include "Camera.h"
 
 // размеры окна
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 700
+#define WINDOW_WIDTH  1920
+#define WINDOW_HEIGHT 1080
 
 GLuint VBO; // буфер вершин
 GLuint IBO; // буфер индексов
 GLuint gWVPLocation; // указатель для доступа к всемирной матрице
-Vector3f Pos(0.0f, 4.0f, -5.0f);
-Vector3f Target(0.0f, -0.4f, 1.0f);
+Vector3f Pos(0.0f, 0.0f, -5.0f);
+Vector3f Target(0.0f, 0.0f, 1.0f);
 Vector3f Up(0.0f, 1.0f, 0.0f);
 
 Camera GameCamera(Pos,Target, Up);
@@ -53,10 +53,26 @@ static void SpecialKeyboardCB(int Key, int x, int y) {
     GameCamera.OnKeyboard(Key);
 }
 
+static void KeyboardCB(unsigned char Key, int x, int y)
+{
+    switch (Key) {
+    case 'q':
+        exit(0);
+    }
+}
+
+static void PassiveMouseCB(int x, int y)
+{
+    GameCamera.OnMouse(x, y);
+}
+
 static void RenderSceneCB()
 {
+    GameCamera.OnRender();
     // очистка буфера кадра
     glClear(GL_COLOR_BUFFER_BIT);
+
+    
 
     static float SpeedRotate = 0.0f;
     static float SpeedX = 0.0f;
@@ -94,8 +110,6 @@ static void RenderSceneCB()
     //Vector3f CameraUp(0.0f, 1.0f, 0.0f);
    
 
-    
-
     // установка камеры
     //p.SetCamera(CameraPos, CameraTarget, CameraUp);
     p.SetCamera(GameCamera.GetPos(), GameCamera.GetTarget(), GameCamera.GetUp());
@@ -129,6 +143,9 @@ static void InitializeGlutCallbacks()
     glutIdleFunc(RenderSceneCB);
     //функция обратного вызова для получения специальных событий клавиатуры
     glutSpecialFunc(SpecialKeyboardCB);
+
+    glutPassiveMotionFunc(PassiveMouseCB);
+    glutKeyboardFunc(KeyboardCB);
 }
 
 static void CreateVertexBuffer()
@@ -241,7 +258,10 @@ int main(int argc, char** argv)
     // задаем параметры окна
     glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     glutInitWindowPosition(100, 100);
-    glutCreateWindow("Tutorial 13");
+    glutCreateWindow("Tutorial 15");
+
+    glutGameModeString("1920x1080@144");
+    glutEnterGameMode();
 
     InitializeGlutCallbacks();
 

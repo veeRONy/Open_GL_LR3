@@ -9,6 +9,12 @@
 #define ToRadian(x) ((x) * M_PI / 180.0f)
 #define ToDegree(x) ((x) * 180.0f / M_PI)
 
+struct Vector2i
+{
+    int x;
+    int y;
+};
+
 struct Vector3f
 {
     float x;
@@ -53,7 +59,7 @@ struct Vector3f
     }
 
     
-
+    void Rotate(float Angle, const Vector3f& Axis);
     Vector3f Cross(const Vector3f& v) const;
 
     Vector3f& Normalize();
@@ -122,6 +128,21 @@ public:
     void InitCameraTransform(const Vector3f& Target, const Vector3f& Up);
     void InitPersProjTransform(float FOV, float Width, float Height, float zNear, float zFar);
 };
+
+struct Quaternion
+{
+    float x, y, z, w;
+
+    Quaternion(float _x, float _y, float _z, float _w);
+
+    void Normalize();
+
+    Quaternion Conjugate();
+};
+
+Quaternion operator*(const Quaternion& l, const Quaternion& r);
+
+Quaternion operator*(const Quaternion& q, const Vector3f& v);
 
 
 #endif	/* MATH_3D_H */
