@@ -70,6 +70,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickWand;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickCore;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\Magick++;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\lib;$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickWand;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickCore;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\Magick++;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\lib;$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -104,10 +112,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickWand;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickCore;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\Magick++;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>CORE_RL_Magick++_.lib;CORE_RL_MagickCore_.lib;CORE_RL_MagickWand_.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -118,27 +129,48 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickWand;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\MagickCore;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include\Magick++;C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>CORE_RL_Magick++_.lib;CORE_RL_MagickCore_.lib;CORE_RL_MagickWand_.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="glut_backend.cpp" />
+    <ClCompile Include="lighting_technique.cpp" />
     <ClCompile Include="math_3d.cpp" />
+    <ClCompile Include="ogldev_util.cpp" />
     <ClCompile Include="pipeline.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="technique.cpp" />
+    <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\ogldev-master\Include\3rdparty\stb_image.h" />
+    <ClInclude Include="..\..\..\..\..\ogldev-master\Include\3rdparty\stb_image_write.h" />
+    <ClInclude Include="..\..\..\..\..\ogldev-master\Include\ogldev_util.h" />
+    <ClInclude Include="callbacks.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="glut_backend.h" />
+    <ClInclude Include="lighting_technique.h" />
     <ClInclude Include="math_3d.h" />
+    <ClInclude Include="ogldev_types.h" />
     <ClInclude Include="pipeline.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="technique.h" />
+    <ClInclude Include="texture.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

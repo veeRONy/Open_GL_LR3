@@ -3,7 +3,7 @@
 #include <GL/freeglut.h>
 
 const static float StepSize = 0.1f;
-const static int MARGIN = 10;
+const static int MARGIN = 5;
 
 bool Camera::OnKeyboard(int Key)
 {
