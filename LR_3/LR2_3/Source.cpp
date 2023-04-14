@@ -5,287 +5,255 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include "math_3d.h"
 #include "pipeline.h"
 #include "Camera.h"
+#include "texture.h"
+#include "lighting_technique.h"
+#include "glut_backend.h"
+#include "util.h"
 
-// размеры окна
-#define WINDOW_WIDTH  1920
+#define WINDOW_WIDTH 1920
 #define WINDOW_HEIGHT 1080
 
-GLuint VBO; // буфер вершин
-GLuint IBO; // буфер индексов
-GLuint gWVPLocation; // указатель для доступа к всемирной матрице
-Vector3f Pos(0.0f, 0.0f, -5.0f);
-Vector3f Target(0.0f, 0.0f, 1.0f);
-Vector3f Up(0.0f, 1.0f, 0.0f);
-
-Camera GameCamera(Pos,Target, Up);
-
-// используем вершинный шейдер
-static const char* pVS = "                                                          \n\
-#version 330                                                                        \n\
-                                                                                    \n\
-layout (location = 0) in vec3 Position;                                             \n\
-                                                                                    \n\
-uniform mat4 gWVP;                                                                  \n\
-                                                                                    \n\
-out vec4 Color;                                                                     \n\
-                                                                                    \n\
-void main()                                                                         \n\
-{                                                                                   \n\
-    gl_Position = gWVP * vec4(Position, 1.0);                                       \n\
-    Color = vec4(clamp(Position, 0.0, 1.0), 1.0);                                   \n\
-}";
-// используем фрагментный шейдер
-static const char* pFS = "                                                          \n\
-#version 330                                                                        \n\
-                                                                                    \n\
-in vec4 Color;                                                                      \n\
-                                                                                    \n\
-out vec4 FragColor;                                                                 \n\
-                                                                                    \n\
-void main()                                                                         \n\
-{                                                                                   \n\
-    FragColor = Color;                                                              \n\
-}";
-
-static void SpecialKeyboardCB(int Key, int x, int y) {
-    GameCamera.OnKeyboard(Key);
-}
-
-static void KeyboardCB(unsigned char Key, int x, int y)
+struct Vertex
 {
-    switch (Key) {
-    case 'q':
-        exit(0);
+    Vector3f m_pos; // координаты фигуры
+    Vector2f m_tex; // координаты текстуры
+    Vector3f m_normal; // нормали
+
+    Vertex() {}
+
+    Vertex(Vector3f pos, Vector2f tex)
+    {
+        m_pos = pos;
+        m_tex = tex;
+        m_normal = Vector3f(0.0f, 0.0f, 0.0f);
     }
-}
+};
 
-static void PassiveMouseCB(int x, int y)
+class Main : public ICallbacks
 {
-    GameCamera.OnMouse(x, y);
-}
+public:
 
-static void RenderSceneCB()
-{
-    GameCamera.OnRender();
-    // очистка буфера кадра
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    
-
-    static float SpeedRotate = 0.0f;
-    static float SpeedX = 0.0f;
-    static float SpeedY = 0.0f;
-    static float Scale = 0.0f;
-    // скорость вращения
-    SpeedRotate += 0.2f;
-    // скорость перемещения по Х
-    SpeedX += 0.001f;
-    // скорость перемещения по Y
-    SpeedY += 0.002f;
-    // размер
-    Scale += 0.001f;
-
-    Pipeline p;
-    // вращение
-    //p.Rotate(0.0f, SpeedRotate, 0.0f);
-    // координаты
-    p.WorldPos(0.0f, 0.0f, 0.0f);
-    // изменяем размер
-    //p.Scale(sinf(Scale), fabs(sinf(Scale)), sinf(Scale));
-
-    //float cameraX = 0.0f;
-    //cameraX += 1.0f;
-   
-
-    // позиция камеры - x,y,z
-    //Vector3f CameraPos(0.2f, 4.0f, -5.0f);
-    // вращение камеры
-    // 1 - +вправо-влево (x), 2 - +вверх-вниз (y), 
-    //3 - 1: по оси Z в полож направлении,0 - вверх, -1: в отрицательном направлении оси Z,
-    //Vector3f CameraTarget(0.0f, -0.4f, 1.0f);
-    // поворот камеры
-    // 1- влево-вправо, 2 и 3- переворот вверх ногами
-    //Vector3f CameraUp(0.0f, 1.0f, 0.0f);
-   
-
-    // установка камеры
-    //p.SetCamera(CameraPos, CameraTarget, CameraUp);
-    p.SetCamera(GameCamera.GetPos(), GameCamera.GetTarget(), GameCamera.GetUp());
-
-    p.SetPerspectiveProj(60.0f, WINDOW_WIDTH, WINDOW_HEIGHT, 1.0f, 100.0f);
-
-
-    // функция для загрузки данных в uniform-переменные шейдера
-    glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, (const GLfloat*)p.GetTrans());
-
-    glEnableVertexAttribArray(0);
-    // привязываем массив вершин к VBO
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Этот вызов говорит конвейеру как воспринимать данные внутри буфера
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    // функция для отрисовки
-    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-
-    glDisableVertexAttribArray(0);
-    // меняем фоновый буфер и буфер кадра местами
-    glutSwapBuffers();
-}
-
-
-static void InitializeGlutCallbacks()
-{
-    // функция отображения на экран
-    glutDisplayFunc(RenderSceneCB);
-    // указываем функцию рендера в качестве ленивой
-    glutIdleFunc(RenderSceneCB);
-    //функция обратного вызова для получения специальных событий клавиатуры
-    glutSpecialFunc(SpecialKeyboardCB);
-
-    glutPassiveMotionFunc(PassiveMouseCB);
-    glutKeyboardFunc(KeyboardCB);
-}
-
-static void CreateVertexBuffer()
-{
-    // массив точек
-    Vector3f Vertices[4];
-    Vertices[0] = Vector3f(-1.0f, -1.0f, 0.5773f);
-    Vertices[1] = Vector3f(0.0f, -1.0f, -1.15475);
-    Vertices[2] = Vector3f(1.0f, -1.0f, 0.5773f);
-    Vertices[3] = Vector3f(0.0f, 1.0f, 0.0f);
-
-    // функция для генерации объектов
-    glGenBuffers(1, &VBO);
-    // привязываем массив вершин к VBO
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // передаем данные в массив вершин
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
-}
-
-static void CreateIndexBuffer()
-{
-    unsigned int Indices[] = { 0, 3, 1,
-                               1, 3, 2,
-                               2, 3, 0,
-                               0, 2, 1 };
-
-    // привязываем массив индексов к IBO
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
-}
-
-static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
-{
-    // создаем шейдер
-    GLuint ShaderObj = glCreateShader(ShaderType);
-    // проверка
-    if (ShaderObj == 0) {
-        fprintf(stderr, "Error creating shader type %d\n", ShaderType);
-        exit(0);
-    }
-    // исходный код шейдера
-    const GLchar* p[1];
-    p[0] = pShaderText;
-    GLint Lengths[1];
-    Lengths[0] = strlen(pShaderText);
-    glShaderSource(ShaderObj, 1, p, Lengths);
-    // компиляция шейдера
-    glCompileShader(ShaderObj);
-    // проверка
-    GLint success;
-    glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        GLchar InfoLog[1024];
-        glGetShaderInfoLog(ShaderObj, 1024, NULL, InfoLog);
-        fprintf(stderr, "Error compiling shader type %d: '%s'\n", ShaderType, InfoLog);
-        exit(1);
-    }
-    // присоединяем скомпилированный объект шейдера к объекту программы
-    glAttachShader(ShaderProgram, ShaderObj);
-}
-
-static void CompileShaders()
-{
-    // создаем программу шейдера
-    GLuint ShaderProgram = glCreateProgram();
-    // проверка
-    if (ShaderProgram == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        exit(1);
+    Main()
+    {
+        m_pGameCamera = NULL;
+        m_pTexture = NULL;
+        m_pEffect = NULL;
+        m_SpeedRotate = 0.0f;
+        m_directionalLight.Color = Vector3f(0.9f, 0.9f, 0.2f);
+        m_directionalLight.AmbientIntensity = 0.5f;
+        m_directionalLight.DiffuseIntensity = 0.75f;
+        m_directionalLight.Direction = Vector3f(1.0f, 1.0f, 0.0f);
+       
     }
 
-    // добавление шейдеров
-    AddShader(ShaderProgram, pVS, GL_VERTEX_SHADER);
-    AddShader(ShaderProgram, pFS, GL_FRAGMENT_SHADER);
-
-    // проверка
-    GLint Success = 0;
-    GLchar ErrorLog[1024] = { 0 };
-
-    // линковка программы шейдера
-    glLinkProgram(ShaderProgram);
-    glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
-    if (Success == 0) {
-        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        exit(1);
+    ~Main()
+    {
+        delete m_pEffect;
+        delete m_pGameCamera;
+        delete m_pTexture;
     }
 
-    // проверка
-    glValidateProgram(ShaderProgram);
-    glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
-    if (!Success) {
-        glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-    // для использования отлинкованной программы шейдеров мы назначаем её для конвейера
-    glUseProgram(ShaderProgram);
+    bool Init()
+    {
+        Vector3f Pos(0.0f, 0.0f, -3.0f);
+        Vector3f Target(0.0f, 0.0f, 1.0f);
+        Vector3f Up(0.0, 1.0f, 0.0f);
+        m_pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, Pos, Target, Up);
 
-    gWVPLocation = glGetUniformLocation(ShaderProgram, "gWVP");
-    assert(gWVPLocation != 0xFFFFFFFF);
-}
+        unsigned int Indices[] = { 0, 3, 1,
+                                   1, 3, 2,
+                                   2, 3, 0,
+                                   1, 2, 0 };
+
+        CreateIndexBuffer(Indices, sizeof(Indices));
+
+        CreateVertexBuffer(Indices, ARRAY_SIZE_IN_ELEMENTS(Indices));
+
+        m_pEffect = new LightingTechnique();
+
+        if (!m_pEffect->Init())
+        {
+            printf("Error initializing the lighting technique\n");
+            return false;
+        }
+
+        m_pEffect->Enable();
+
+        m_pEffect->SetTextureUnit(0);
+
+        //  файл с текстурой
+        m_pTexture = new Texture(GL_TEXTURE_2D, "C:/Users/user/Desktop/Учеба/С++ программы/ИКГ/LR_3(17 tutorial)/LR2_3/test.png");
+
+        if (!m_pTexture->Load()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void Run()
+    {
+        GLUTBackendRun(this);
+    }
+
+    virtual void RenderSceneCB()
+    {
+        m_pGameCamera->OnRender();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        m_SpeedRotate += 0.1f;
+
+        Pipeline p;
+        p.Rotate(0.0f, m_SpeedRotate, 0.0f);
+        p.WorldPos(0.0f, 0.0f, 3.0f);
+        p.SetCamera(m_pGameCamera->GetPos(), m_pGameCamera->GetTarget(), m_pGameCamera->GetUp());
+        p.SetPerspectiveProj(60.0f, WINDOW_WIDTH, WINDOW_HEIGHT, 1.0f, 100.0f);
+        m_pEffect->SetWVP(p.GetWVPTrans());
+        const Matrix4f& WorldTransformation = p.GetWorldTrans();
+        m_pEffect->SetWorldMatrix(WorldTransformation);
+        m_pEffect->SetDirectionalLight(m_directionalLight);
+
+        m_pEffect->SetEyeWorldPos(m_pGameCamera->GetPos());
+        // интенсивность отражения материала
+        m_pEffect->SetMatSpecularIntensity(10.1f);
+        // сила отражения
+        m_pEffect->SetMatSpecularPower(100);
+
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)12);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
+        m_pTexture->Bind(GL_TEXTURE0);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+
+        glutSwapBuffers();
+    }
+
+    virtual void IdleCB()
+    {
+        RenderSceneCB();
+    }
+
+    virtual void SpecialKeyboardCB(int Key, int x, int y)
+    {
+        m_pGameCamera->OnKeyboard(Key);
+    }
+
+
+    virtual void KeyboardCB(unsigned char Key, int x, int y)
+    {
+        switch (Key) {
+        case 'q':
+            glutLeaveMainLoop();
+            break;
+
+        case 'a':
+            m_directionalLight.AmbientIntensity += 0.05f;
+            break;
+
+        case 's':
+            m_directionalLight.AmbientIntensity -= 0.05f;
+            break;
+        case 'z':
+            m_directionalLight.DiffuseIntensity += 0.05f;
+            break;
+
+        case 'x':
+            m_directionalLight.DiffuseIntensity -= 0.05f;
+            break;
+        }
+    }
+
+
+    virtual void PassiveMouseCB(int x, int y)
+    {
+        m_pGameCamera->OnMouse(x, y);
+    }
+
+private:
+
+    void CalcNormals(const unsigned int* pIndices, unsigned int IndexCount,
+        Vertex* pVertices, unsigned int VertexCount)
+    {
+        for (unsigned int i = 0; i < IndexCount; i += 3) {
+            unsigned int Index0 = pIndices[i];
+            unsigned int Index1 = pIndices[i + 1];
+            unsigned int Index2 = pIndices[i + 2];
+            Vector3f v1 = pVertices[Index1].m_pos - pVertices[Index0].m_pos;
+            Vector3f v2 = pVertices[Index2].m_pos - pVertices[Index0].m_pos;
+            Vector3f Normal = v1.Cross(v2);
+            Normal.Normalize();
+
+            pVertices[Index0].m_normal += Normal;
+            pVertices[Index1].m_normal += Normal;
+            pVertices[Index2].m_normal += Normal;
+        }
+
+        for (unsigned int i = 0; i < VertexCount; i++) {
+            pVertices[i].m_normal.Normalize();
+        }
+    }
+    void CreateVertexBuffer(const unsigned int* pIndices, unsigned int IndexCount)
+    {
+        Vertex Vertices[4] = { Vertex(Vector3f(-1.0f, -1.0f, 0.5773f), Vector2f(0.0f, 0.0f)),
+                               Vertex(Vector3f(0.0f, -1.0f, -1.15475), Vector2f(0.5f, 0.0f)),
+                               Vertex(Vector3f(1.0f, -1.0f, 0.5773f),  Vector2f(1.0f, 0.0f)),
+                               Vertex(Vector3f(0.0f, 1.0f, 0.0f),      Vector2f(0.5f, 1.0f)) };
+
+        unsigned int VertexCount = ARRAY_SIZE_IN_ELEMENTS(Vertices);
+
+        CalcNormals(pIndices, IndexCount, Vertices, VertexCount);
+
+        glGenBuffers(1, &m_VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+    }
+
+    void CreateIndexBuffer(const unsigned int* pIndices, unsigned int SizeInBytes)
+    {
+        glGenBuffers(1, &m_IBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, SizeInBytes, pIndices, GL_STATIC_DRAW);
+    }
+
+    GLuint m_VBO;
+    GLuint m_IBO;
+    LightingTechnique* m_pEffect;
+    Texture* m_pTexture;
+    Camera* m_pGameCamera;
+    float m_SpeedRotate;
+    DirectionLight m_directionalLight;
+};
 
 int main(int argc, char** argv)
 {
-    // инициализируем GLUT
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-    // задаем параметры окна
-    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutInitWindowPosition(100, 100);
-    glutCreateWindow("Tutorial 15");
+    GLUTBackendInit(argc, argv);
 
-    glutGameModeString("1920x1080@144");
-    glutEnterGameMode();
-
-    InitializeGlutCallbacks();
-
-    // инициализируем GLEW
-    GLenum res = glewInit();
-    if (res != GLEW_OK) {
-        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 144, true, "OpenGL tutors")) {
         return 1;
     }
 
-    // цвет фона
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    Main* pApp = new Main();
 
-    // сохдаем массив вершин
-    CreateVertexBuffer();
+    if (!pApp->Init()) {
+        return 1;
+    }
 
-    // создаем массив индексов
-    CreateIndexBuffer();
+    pApp->Run();
 
-    // компиляция шейдеров
-    CompileShaders();
-
-    // основной цикл
-    glutMainLoop();
+    delete pApp;
 
     return 0;
 }

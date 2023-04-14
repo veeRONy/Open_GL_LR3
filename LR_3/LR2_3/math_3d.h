@@ -1,4 +1,3 @@
-#pragma once
 #ifndef MATH_3D_H
 #define	MATH_3D_H
 
@@ -14,6 +13,23 @@ struct Vector2i
     int x;
     int y;
 };
+
+struct Vector2f
+{
+    float x;
+    float y;
+
+    Vector2f()
+    {
+    }
+
+    Vector2f(float _x, float _y)
+    {
+        x = _x;
+        y = _y;
+    }
+};
+
 
 struct Vector3f
 {
@@ -31,6 +47,7 @@ struct Vector3f
         y = _y;
         z = _z;
     }
+
     Vector3f& operator+=(const Vector3f& r)
     {
         x += r.x;
@@ -58,17 +75,27 @@ struct Vector3f
         return *this;
     }
 
-    
-    void Rotate(float Angle, const Vector3f& Axis);
     Vector3f Cross(const Vector3f& v) const;
 
     Vector3f& Normalize();
+
+    void Rotate(float Angle, const Vector3f& Axis);
 
     void Print() const
     {
         printf("(%.02f, %.02f, %.02f", x, y, z);
     }
 };
+
+
+inline Vector3f operator+(const Vector3f& l, const Vector3f& r)
+{
+    Vector3f Ret(l.x + r.x,
+        l.y + r.y,
+        l.z + r.z);
+
+    return Ret;
+}
 
 inline Vector3f operator-(const Vector3f& l, const Vector3f& r)
 {
@@ -87,6 +114,7 @@ inline Vector3f operator*(const Vector3f& l, float f)
 
     return Ret;
 }
+
 
 class Matrix4f
 {
@@ -129,6 +157,7 @@ public:
     void InitPersProjTransform(float FOV, float Width, float Height, float zNear, float zFar);
 };
 
+
 struct Quaternion
 {
     float x, y, z, w;
@@ -143,6 +172,5 @@ struct Quaternion
 Quaternion operator*(const Quaternion& l, const Quaternion& r);
 
 Quaternion operator*(const Quaternion& q, const Vector3f& v);
-
 
 #endif	/* MATH_3D_H */

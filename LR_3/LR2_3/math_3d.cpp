@@ -41,7 +41,6 @@ void Vector3f::Rotate(float Angle, const Vector3f& Axe)
 }
 
 
-
 void Matrix4f::InitScaleTransform(float ScaleX, float ScaleY, float ScaleZ)
 {
     m[0][0] = ScaleX; m[0][1] = 0.0f;   m[0][2] = 0.0f;   m[0][3] = 0.0f;
@@ -111,6 +110,7 @@ void Matrix4f::InitPersProjTransform(float FOV, float Width, float Height, float
     m[2][0] = 0.0f;                   m[2][1] = 0.0f;            m[2][2] = (-zNear - zFar) / zRange; m[2][3] = 2.0f * zFar * zNear / zRange;
     m[3][0] = 0.0f;                   m[3][1] = 0.0f;            m[3][2] = 1.0f;          m[3][3] = 0.0;
 }
+
 
 Quaternion::Quaternion(float _x, float _y, float _z, float _w)
 {
