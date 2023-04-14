@@ -3,13 +3,52 @@
 
 #include "technique.h"
 #include "math_3d.h"
+#include "util.h"
 
-struct DirectionLight
+#define MAX_POINT_LIGHTS 3
+
+struct BaseLight
+{
+    Vector3f Color;
+    float AmbientIntensity;
+    float DiffuseIntensity;
+
+    BaseLight()
+    {
+        Color = Vector3f(0.0f, 0.0f, 0.0f);
+        AmbientIntensity = 0.0f;
+        DiffuseIntensity = 0.0f;
+    }
+};
+
+struct DirectionLight : public BaseLight
 {
     Vector3f Color;
     float AmbientIntensity;
     Vector3f Direction;
     float DiffuseIntensity;
+};
+
+struct PointLight : public BaseLight
+{
+    Vector3f Position;
+
+    struct
+    {
+        float Constant;
+        float Linear;
+        float Exp;
+    } Attenuation; // затухание
+
+    PointLight()
+    {
+        Position = Vector3f(0.0f, 0.0f, 0.0f);
+        Attenuation.Constant = 1.0f;
+        Attenuation.Linear = 0.0f;
+        Attenuation.Exp = 0.0f;
+    }
+    
+    
 };
 
 class LightingTechnique : public Technique
@@ -27,6 +66,8 @@ public:
     void SetMatSpecularIntensity(float Intensity);
     void SetMatSpecularPower(float Power);
 
+    void SetPointLights(unsigned int NumLights, const PointLight* pLights);
+
 private:
     GLuint m_WVPLocation;
     GLuint m_WorldMatrixLocation;
@@ -36,12 +77,26 @@ private:
     GLuint m_matSpecularIntensityLocation;
     GLuint m_matSpecularPowerLocation;
 
+    GLuint m_numPointLightsLocation;
+
     struct {
         GLuint Color;
         GLuint AmbientIntensity;
         GLuint Direction;
         GLuint DiffuseIntensity;
     } m_dirLightLocation;
+
+    struct {
+        GLuint Color;
+        GLuint AmbientIntensity;
+        GLuint DiffuseIntensity;
+        GLuint Position;
+        struct {
+            GLuint Constant;
+            GLuint Linear;
+            GLuint Exp;
+        } Atten;
+    } m_pointLightsLocation[MAX_POINT_LIGHTS];
 };
 
 #endif // LIGHTINGTECHNIQUE_H
