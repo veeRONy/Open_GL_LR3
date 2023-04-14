@@ -44,9 +44,9 @@ public:
         m_SpeedRotate = 0.0f;
         m_scale = 0.0f;
         m_directionalLight.Color = Vector3f(1.0f, 1.0f, 1.0f);
-        m_directionalLight.AmbientIntensity = 0.5f;
+        m_directionalLight.AmbientIntensity = 0.2f;
         m_directionalLight.DiffuseIntensity = 0.75f;
-        m_directionalLight.Direction = Vector3f(1.0f, 1.0f, 0.0f);
+        m_directionalLight.Direction = Vector3f(1.0f, 0.0f, 0.0f);
        
     }
 
@@ -126,6 +126,26 @@ public:
         m_pEffect->SetPointLights(3, pl);
 
 
+
+        SpotLight sl[2];
+        sl[0].DiffuseIntensity = 15.0f;
+        sl[0].Color = Vector3f(1.0f, 1.0f, 0.7f);
+        sl[0].Position = Vector3f(-0.0f, -1.9f, -0.0f);
+        sl[0].Direction = Vector3f(sinf(m_scale), 0.0f, cosf(m_scale));
+        sl[0].Attenuation.Linear = 0.1f;
+        sl[0].Cutoff = 10.0f;
+
+        sl[1].DiffuseIntensity = 5.0f;
+        sl[1].Color = Vector3f(0.5f, 1.0f, 0.0f);
+        sl[1].Position = m_pGameCamera->GetPos();
+        sl[1].Direction = m_pGameCamera->GetTarget();
+        sl[1].Attenuation.Linear = 0.1f;
+        sl[1].Cutoff = 10.0f;
+
+        m_pEffect->SetSpotLights(2, sl);
+
+
+
         m_SpeedRotate += 0.1f;
 
         Pipeline p;
@@ -153,8 +173,8 @@ public:
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
         m_pTexture->Bind(GL_TEXTURE0);
-        //glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);

@@ -6,6 +6,7 @@
 #include "util.h"
 
 #define MAX_POINT_LIGHTS 3
+#define MAX_SPOT_LIGHTS 3
 
 struct BaseLight
 {
@@ -51,6 +52,18 @@ struct PointLight : public BaseLight
     
 };
 
+struct SpotLight : public PointLight
+{
+    Vector3f Direction;
+    float Cutoff;
+
+    SpotLight()
+    {
+        Direction = Vector3f(0.0f, 0.0f, 0.0f);
+        Cutoff = 0.0f;
+    }
+};
+
 class LightingTechnique : public Technique
 {
 public:
@@ -68,6 +81,8 @@ public:
 
     void SetPointLights(unsigned int NumLights, const PointLight* pLights);
 
+    void SetSpotLights(unsigned int NumLights, const SpotLight* pLights);
+
 private:
     GLuint m_WVPLocation;
     GLuint m_WorldMatrixLocation;
@@ -78,6 +93,7 @@ private:
     GLuint m_matSpecularPowerLocation;
 
     GLuint m_numPointLightsLocation;
+    GLuint m_numSpotLightsLocation;
 
     struct {
         GLuint Color;
@@ -97,6 +113,20 @@ private:
             GLuint Exp;
         } Atten;
     } m_pointLightsLocation[MAX_POINT_LIGHTS];
+
+    struct {
+        GLuint Color;
+        GLuint AmbientIntensity;
+        GLuint DiffuseIntensity;
+        GLuint Position;
+        GLuint Direction;
+        GLuint Cutoff;
+        struct {
+            GLuint Constant;
+            GLuint Linear;
+            GLuint Exp;
+        } Atten;
+    } m_spotLightsLocation[MAX_SPOT_LIGHTS];
 };
 
 #endif // LIGHTINGTECHNIQUE_H
